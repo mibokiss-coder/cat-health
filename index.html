@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="貓咪日誌">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>貓咪健康日誌</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --or:#E8813A;--or-bg:#FAF0EA;--or-tx:#993C1D;
+  --pu:#534AB7;--pu-bg:#EEEDFE;--pu-tx:#3C3489;
+  --gr-bg:#EAF3DE;--gr-tx:#3B6D11;--gr-bd:#639922;
+  --am-bg:#FAEEDA;--am-tx:#854F0B;
+  --gy-bg:#F1EFE8;--gy-tx:#5F5E5A;
+  --bl-bg:#E6F1FB;--bl-tx:#185FA5;
+  --re-bg:#FAECE7;--re-tx:#993C1D;
+  --bg:#fff;--bg2:#f5f5f3;--bg3:#eeedea;
+  --bd:rgba(0,0,0,.12);--bd2:rgba(0,0,0,.22);
+  --tx:#1a1a1a;--tx2:#666;--tx3:#999;
+  --su:#3B6D11;--su-bg:#EAF3DE;--su-bd:#639922;
+  --wa-bd:#EF9F27;--da-bg:#FAECE7;--da-tx:#993C1D;
+  --r:12px;--rs:8px;--rp:20px;
+  --st:env(safe-area-inset-top);--sb:env(safe-area-inset-bottom)
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;
+  --bd:rgba(255,255,255,.12);--bd2:rgba(255,255,255,.22);
+  --tx:#f0f0f0;--tx2:#aaa;--tx3:#555;
+  --or-bg:#3a2010;--or-tx:#f5a66a;
+  --pu-bg:#1e1c3a;--pu-tx:#9b95e8;
+  --gr-bg:#1a2e10;--gr-tx:#7ec85a;--gr-bd:#3B6D11;
+  --am-bg:#2e1f00;--am-tx:#f0b040;
+  --gy-bg:#2a2a2a;--gy-tx:#aaa;
+  --bl-bg:#0e2040;--bl-tx:#60a8e8;
+  --re-bg:#2e1010;--re-tx:#f08080;
+  --su:#7ec85a;--su-bg:#1a2e10;--su-bd:#3B6D11;
+  --da-bg:#2e1010;--da-tx:#f08080
+}}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:var(--bg);color:var(--tx);overscroll-behavior:none}
+body{display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+.topbar{padding:calc(12px + var(--st)) 16px 12px;border-bottom:.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:10}
+.topbar h1{font-size:17px;font-weight:600}
+.topbar-date{font-size:12px;color:var(--tx2)}
+.cat-tabs{display:flex;gap:8px;padding:10px 16px;background:var(--bg);border-bottom:.5px solid var(--bd);position:sticky;top:calc(47px + var(--st));z-index:9}
+.ct{flex:1;padding:8px 4px;border:.5px solid var(--bd2);border-radius:var(--r);background:var(--bg);cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);text-align:center}
+.ct span{font-size:11px;display:block;margin-bottom:1px;opacity:.7}
+.ct.as{background:var(--bg3);color:var(--tx)}
+.ct.ao{background:var(--or-bg);border-color:var(--or);color:var(--or-tx)}
+.ct.ab{background:var(--pu-bg);border-color:var(--pu);color:var(--pu-tx)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px calc(32px + var(--sb))}
+.panel{display:none}.panel.active{display:block}
+.stabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.stabs::-webkit-scrollbar{display:none}
+.st{padding:6px 14px;border:.5px solid var(--bd);border-radius:var(--rp);background:var(--bg);cursor:pointer;font-size:13px;color:var(--tx2);white-space:nowrap;flex-shrink:0}
+.st.active{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.card{background:var(--bg);border:.5px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.clabel{font-size:13px;font-weight:500;color:var(--tx2);margin-bottom:12px}
+.frow{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
+.fg{flex:1;min-width:80px}
+.fg label{display:block;font-size:12px;color:var(--tx2);margin-bottom:4px}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;font-size:15px;border:.5px solid var(--bd2);border-radius:var(--rs);background:var(--bg2);color:var(--tx);-webkit-appearance:none;appearance:none;font-family:inherit}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--or);box-shadow:0 0 0 3px rgba(232,129,58,.15)}
+.fg textarea{resize:vertical;min-height:80px}
+/* Custom autocomplete */
+.ac-wrap{position:relative}
+.ac-inp{width:100%;padding:10px 12px;font-size:15px;border:.5px solid var(--bd2);border-radius:var(--rs);background:var(--bg2);color:var(--tx);-webkit-appearance:none;font-family:inherit}
+.ac-inp:focus{outline:none;border-color:var(--or);box-shadow:0 0 0 3px rgba(232,129,58,.15)}
+.ac-drop{display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg);border:.5px solid var(--bd2);border-radius:var(--rs);z-index:200;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.ac-drop.open{display:block}
+.ac-opt{padding:12px 14px;font-size:14px;cursor:pointer;border-bottom:.5px solid var(--bd);color:var(--tx)}
+.ac-opt:last-child{border-bottom:none}
+.ac-opt:active,.ac-opt.hover{background:var(--bg2)}
+.btn{padding:10px 18px;border:.5px solid var(--bd2);border-radius:var(--rs);background:var(--bg);cursor:pointer;font-size:14px;color:var(--tx);font-family:inherit;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.btn-primary{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.btn-sm{padding:7px 14px;font-size:13px}
+.btn-or{background:var(--or-bg);border-color:var(--or);color:var(--or-tx);font-weight:500}
+.btn-gr{background:var(--gr-bg);border-color:var(--gr-bd);color:var(--gr-tx);font-weight:500}
+.btn-full{width:100%;text-align:center;padding:13px}
+.meal-slot{background:var(--bg2);border:.5px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.meal-slot.fed{border-color:var(--wa-bd)}
+.meal-slot.done{border-color:var(--su-bd)}
+.mhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mname{font-size:15px;font-weight:600}
+.mstatus{font-size:12px;color:var(--tx2)}
+.mstatus.done{color:var(--su)}
+.tchip{font-size:11px;color:var(--tx3);background:var(--bg3);border-radius:10px;padding:2px 8px;display:inline-block}
+.toilet-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.tbt{padding:18px 8px;border-radius:var(--r);border:.5px solid var(--bd2);background:var(--bg);cursor:pointer;text-align:center;font-size:14px;font-weight:500;font-family:inherit}
+.tbt:active{transform:scale(.95)}
+.tbt.pee{border-color:var(--wa-bd);color:var(--am-tx)}
+.tbt.poop{border-color:#888;color:var(--gy-tx)}
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.ccard{background:var(--bg2);border-radius:var(--rs);padding:12px;text-align:center}
+.cnum{font-size:28px;font-weight:600}
+.clbl{font-size:12px;color:var(--tx2);margin-top:2px}
+.med-banner{display:flex;align-items:center;justify-content:space-between;border-radius:var(--r);padding:14px 16px;margin-bottom:14px;border:.5px solid var(--bd)}
+.med-banner.orange{background:var(--or-bg);border-left:4px solid var(--or);border-radius:var(--r)}
+.med-banner.black{background:var(--pu-bg);border-left:4px solid var(--pu);border-radius:var(--r)}
+.mcount{font-size:30px;font-weight:700}
+.mcount.orange{color:var(--or-tx)}
+.mcount.black{color:var(--pu-tx)}
+.msub{font-size:12px;color:var(--tx2);margin-top:2px}
+.recs{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.rec{background:var(--bg2);border-radius:var(--rs);padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.rec-l{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.rec-time{font-size:11px;color:var(--tx3)}
+.rec-main{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-detail{font-size:12px;color:var(--tx2)}
+.rec-del{background:none;border:none;cursor:pointer;color:var(--tx3);font-size:20px;padding:4px 8px;border-radius:6px;line-height:1;flex-shrink:0}
+.rec-del:active{background:var(--da-bg);color:var(--da-tx)}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;margin-right:4px}
+.t-pee{background:var(--am-bg);color:var(--am-tx)}
+.t-poop{background:var(--gy-bg);color:var(--gy-tx)}
+.t-water{background:var(--bl-bg);color:var(--bl-tx)}
+.t-med{background:var(--pu-bg);color:var(--pu-tx)}
+.t-ok{background:var(--gr-bg);color:var(--gr-tx)}
+.t-warn{background:var(--re-bg);color:var(--re-tx)}
+.empty{text-align:center;padding:2rem;color:var(--tx3);font-size:14px}
+.list-table{width:100%;border-collapse:collapse}
+.list-table tr{border-bottom:.5px solid var(--bd)}
+.list-table tr:last-child{border-bottom:none}
+.list-table td{padding:9px 4px;vertical-align:middle}
+.list-table td:first-child{width:100%}
+.item-text{font-size:14px}
+.lei{width:100%;font-size:14px;padding:7px 10px;border:.5px solid var(--bd2);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-family:inherit}
+.lacts{display:flex;gap:4px;justify-content:flex-end}
+.ab2{padding:5px 10px;font-size:12px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);cursor:pointer;color:var(--tx2);font-family:inherit}
+.ab2:active{transform:scale(.95)}
+.ab2.edit{border-color:var(--bl-tx);color:var(--bl-tx)}
+.ab2.save{border-color:var(--su-bd);color:var(--su)}
+.ab2.del{border-color:var(--or);color:var(--or-tx)}
+.add-row{display:flex;gap:8px;margin-top:10px}
+.add-row input{flex:1;font-size:14px;padding:10px 12px;border:.5px solid var(--bd2);border-radius:var(--rs);background:var(--bg2);color:var(--tx);font-family:inherit}
+.add-row input:focus{outline:none;border-color:var(--or)}
+.hint{font-size:12px;color:var(--tx3);margin-top:8px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:var(--bg);border-radius:var(--r) var(--r) 0 0;padding:20px 20px calc(20px + var(--sb));width:100%;max-width:480px}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px}
+.mbtns{display:flex;gap:8px;margin-top:16px}
+.mbtns .btn{flex:1;text-align:center}
+.lf{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
+.lf::-webkit-scrollbar{display:none}
+.lf button{padding:6px 14px;border:.5px solid var(--bd);border-radius:var(--rp);background:var(--bg);cursor:pointer;font-size:13px;color:var(--tx2);white-space:nowrap;font-family:inherit}
+.lf button.active{background:var(--bg3);color:var(--tx);border-color:var(--bd2)}
+/* Charts */
+.chart-section{margin-bottom:18px}
+.chart-title{font-size:13px;font-weight:600;color:var(--tx2);margin-bottom:8px}
+.chart-wrap{background:var(--bg2);border-radius:var(--r);padding:12px 10px 8px;overflow:hidden}
+canvas{display:block;width:100%!important}
+.chart-legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🐱 貓咪健康日誌</h1>
+  <span class="topbar-date" id="today-date"></span>
+</div>
+<div class="cat-tabs">
+  <div class="ct as" id="tab-shared" onclick="switchCat('shared')"><span>共同</span>橘子＆牛牛</div>
+  <div class="ct" id="tab-orange" onclick="switchCat('orange')"><span>橘</span>橘子</div>
+  <div class="ct" id="tab-black" onclick="switchCat('black')"><span>牛</span>牛牛</div>
+</div>
+
+<div class="scroll">
+
+<div class="panel active" id="panel-shared">
+  <div class="stabs" id="sec-shared">
+    <div class="st active" onclick="switchSec('shared','food',this)">飲食</div>
+    <div class="st" onclick="switchSec('shared','water',this)">飲水</div>
+    <div class="st" onclick="switchSec('shared','toilet',this)">排泄</div>
+    <div class="st" onclick="switchSec('shared','log',this)">紀錄</div>
+    <div class="st" onclick="switchSec('shared','charts',this)">圖表</div>
+    <div class="st" onclick="switchSec('shared','settings',this)">設定</div>
+  </div>
+  <div class="panel active" id="shared-food"><div id="meal-cards"></div></div>
+  <div class="panel" id="shared-water">
+    <div class="card">
+      <div class="clabel">飲水紀錄</div>
+      <div class="frow">
+        <div class="fg"><label>飲水量 (ml)</label><input type="number" id="water-ml" placeholder="0" min="0" inputmode="numeric"></div>
+        <div class="fg"><label>備註</label><input type="text" id="water-note" placeholder="飲水機、碗..."></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="addWater()">紀錄</button>
+    </div>
+    <div id="water-recs" class="recs"></div>
+  </div>
+  <div class="panel" id="shared-toilet">
+    <div class="card">
+      <div class="clabel">今日排泄</div>
+      <div class="crow">
+        <div class="ccard"><div class="cnum" id="pee-count">0</div><div class="clbl">排尿次數</div></div>
+        <div class="ccard"><div class="cnum" id="poop-count">0</div><div class="clbl">排便次數</div></div>
+      </div>
+      <div class="toilet-btns">
+        <button class="tbt pee" onclick="addToilet('排尿')"><div style="font-size:28px;margin-bottom:6px">💧</div>排尿 +1</button>
+        <button class="tbt poop" onclick="addToilet('排便')"><div style="font-size:28px;margin-bottom:6px">🍂</div>排便 +1</button>
+      </div>
+      <div class="fg"><label>標記貓咪（可選）</label>
+        <select id="toilet-cat"><option value="不確定">不確定</option><option value="橘子">橘子</option><option value="牛牛">牛牛</option></select>
+      </div>
+    </div>
+    <div id="toilet-recs" class="recs"></div>
+  </div>
+  <div class="panel" id="shared-log">
+    <div class="lf">
+      <button class="active" onclick="filterLog('all',this)">全部</button>
+      <button onclick="filterLog('meal',this)">飲食</button>
+      <button onclick="filterLog('water',this)">飲水</button>
+      <button onclick="filterLog('toilet',this)">排泄</button>
+    </div>
+    <div id="shared-log-list" class="recs"></div>
+  </div>
+  <div class="panel" id="shared-charts"><div id="charts-shared"></div></div>
+  <div class="panel" id="shared-settings">
+    <div class="card">
+      <div class="clabel">食物名稱選單</div>
+      <div id="food-list-mgr"></div>
+      <p class="hint">可快速選取，也可直接輸入新名稱。</p>
+    </div>
+    <div class="card">
+      <div class="clabel">儲存狀態</div>
+      <div id="storage-status" style="font-size:13px;color:var(--tx2);line-height:1.9"></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-orange">
+  <div class="med-banner orange">
+    <div><div class="mcount orange" id="med-count-orange">0</div><div class="msub">橘子剩餘藥顆數</div></div>
+    <button class="btn btn-sm btn-or" onclick="openStock('orange')">領藥 +</button>
+  </div>
+  <div class="stabs" id="sec-orange">
+    <div class="st active" onclick="switchSec('orange','med',this)">餵藥</div>
+    <div class="st" onclick="switchSec('orange','weight',this)">體重</div>
+    <div class="st" onclick="switchSec('orange','vomit',this)">嘔吐</div>
+    <div class="st" onclick="switchSec('orange','notes',this)">注意事項</div>
+    <div class="st" onclick="switchSec('orange','charts',this)">圖表</div>
+    <div class="st" onclick="switchSec('orange','settings',this)">設定</div>
+  </div>
+  <div class="panel active" id="orange-med"></div>
+  <div class="panel" id="orange-weight"></div>
+  <div class="panel" id="orange-vomit"></div>
+  <div class="panel" id="orange-notes"></div>
+  <div class="panel" id="orange-charts"><div id="charts-orange"></div></div>
+  <div class="panel" id="orange-settings">
+    <div class="card"><div class="clabel">橘子藥名選單</div><div id="med-list-mgr-orange"></div>
+    <p class="hint">可快速選取，也可自由輸入。</p></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-black">
+  <div class="med-banner black">
+    <div><div class="mcount black" id="med-count-black">0</div><div class="msub">牛牛剩餘藥顆數</div></div>
+    <button class="btn btn-sm" style="background:var(--pu-bg);border-color:var(--pu);color:var(--pu-tx)" onclick="openStock('black')">領藥 +</button>
+  </div>
+  <div class="stabs" id="sec-black">
+    <div class="st active" onclick="switchSec('black','med',this)">餵藥</div>
+    <div class="st" onclick="switchSec('black','weight',this)">體重</div>
+    <div class="st" onclick="switchSec('black','vomit',this)">嘔吐</div>
+    <div class="st" onclick="switchSec('black','notes',this)">注意事項</div>
+    <div class="st" onclick="switchSec('black','charts',this)">圖表</div>
+    <div class="st" onclick="switchSec('black','settings',this)">設定</div>
+  </div>
+  <div class="panel active" id="black-med"></div>
+  <div class="panel" id="black-weight"></div>
+  <div class="panel" id="black-vomit"></div>
+  <div class="panel" id="black-notes"></div>
+  <div class="panel" id="black-charts"><div id="charts-black"></div></div>
+  <div class="panel" id="black-settings">
+    <div class="card"><div class="clabel">牛牛藥名選單</div><div id="med-list-mgr-black"></div>
+    <p class="hint">可快速選取，也可自由輸入。</p></div>
+  </div>
+</div>
+
+</div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+// ══ STATE ══
+const STORAGE_KEY = 'cat-health-v2'; // 不改這個 key，資料才不會遺失
+
+const DEF={
+  medStock:{orange:0,black:0},
+  records:[],nid:1,
+  foodList:['主食罐','副食罐','乾飼料','雞肉泥'],
+  medList:{orange:['心絲蟲藥','腸胃藥'],black:['心絲蟲藥','腸胃藥']},
+  mealsDate:'',
+  meals:{
+    早餐:{state:'idle',food:'',given:0,feedTime:null,left:0,collectTime:null},
+    午餐:{state:'idle',food:'',given:0,feedTime:null,left:0,collectTime:null},
+    晚餐:{state:'idle',food:'',given:0,feedTime:null,left:0,collectTime:null}
+  }
+};
+
+let S;
+
+function loadState(){
+  let sv = null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      sv = JSON.parse(raw);
+      console.log('[CatApp] Loaded from localStorage, records:', sv.records?.length, 'medStock:', JSON.stringify(sv.medStock));
+    } else {
+      console.log('[CatApp] No saved data found, using defaults');
+    }
+  } catch(e) {
+    console.error('[CatApp] loadState error:', e);
+    sv = null;
+  }
+
+  if (!sv) {
+    S = JSON.parse(JSON.stringify(DEF));
+    return;
+  }
+
+  // 逐欄位安全還原，任何欄位壞掉都回到預設值
+  S = {
+    medStock: {
+      orange: (typeof sv.medStock?.orange === 'number') ? sv.medStock.orange : 0,
+      black:  (typeof sv.medStock?.black  === 'number') ? sv.medStock.black  : 0
+    },
+    records:  Array.isArray(sv.records)  ? sv.records  : [],
+    nid:      (typeof sv.nid === 'number') ? sv.nid     : 1,
+    foodList: Array.isArray(sv.foodList) ? sv.foodList : [...DEF.foodList],
+    medList: {
+      orange: Array.isArray(sv.medList?.orange) ? sv.medList.orange : [...DEF.medList.orange],
+      black:  Array.isArray(sv.medList?.black)  ? sv.medList.black  : [...DEF.medList.black]
+    },
+    mealsDate: (typeof sv.mealsDate === 'string') ? sv.mealsDate : '',
+    meals: (sv.meals && typeof sv.meals === 'object') ? sv.meals : JSON.parse(JSON.stringify(DEF.meals))
+  };
+}
+
+function saveState(){
+  try {
+    const json = JSON.stringify(S);
+    localStorage.setItem(STORAGE_KEY, json);
+    // 驗證存進去的跟讀出來的一致
+    const check = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (check.medStock?.orange !== S.medStock.orange || check.records?.length !== S.records.length) {
+      console.warn('[CatApp] saveState verify mismatch!');
+    }
+  } catch(e) {
+    console.error('[CatApp] saveState error:', e);
+    alert('儲存失敗，請確認瀏覽器未設為「私密瀏覽」模式，且儲存空間足夠。');
+  }
+}
+
+loadState();
+
+function today(){return new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});}
+function ts(){return new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});}
+function uid(){return S.nid++;}
+function addRec(r){S.records.push({...r,id:uid(),time:ts(),date:today()});saveState();}
+
+// Reset meals each new day
+(function checkDay(){
+  const td=today();
+  if(S.mealsDate!==td){S.mealsDate=td;S.meals=JSON.parse(JSON.stringify(DEF.meals));saveState();}
+})();
+
+document.getElementById('today-date').textContent=today();
+
+let UI={cat:'shared',sec:{shared:'food',orange:'med',black:'med'},logFilter:'all',editing:{},stockCat:null};
+
+// ══ NAV ══
+function switchCat(cat){
+  UI.cat=cat;
+  ['shared','orange','black'].forEach(c=>{
+    document.getElementById('tab-'+c).className='ct'+(c===cat?(c==='orange'?' ao':c==='black'?' ab':' as'):'');
+    const p=document.getElementById('panel-'+c);if(p)p.className='panel'+(c===cat?' active':'');
+  });
+  renderAll();
+}
+function switchSec(cat,sec,el){
+  UI.sec[cat]=sec;
+  document.getElementById('sec-'+cat).querySelectorAll('.st').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const secs=cat==='shared'?['food','water','toilet','log','charts','settings']:['med','weight','vomit','notes','charts','settings'];
+  secs.forEach(s=>{const p=document.getElementById(cat+'-'+s);if(p)p.className='panel'+(s===sec?' active':'');});
+  renderAll();
+}
+
+// ══ AUTOCOMPLETE (iOS-safe, free text allowed) ══
+// We use a custom dropdown instead of <datalist> which iOS Safari doesn't show reliably
+let acOpenId=null;
+function acHTML(id,list,ph){
+  const opts=list.map(v=>`<div class="ac-opt" id="ac-opt-${id}-${v.replace(/\s/g,'_')}" ontouchstart="acPick('${id}',this)" onmousedown="acPick('${id}',this)">${v}</div>`).join('');
+  return `<div class="ac-wrap">
+    <input class="ac-inp" id="${id}" placeholder="${ph}" autocomplete="off" autocorrect="off" spellcheck="false"
+      oninput="acFilter('${id}',this.value)"
+      onfocus="acOpen('${id}')"
+      onblur="acBlur('${id}')">
+    <div class="ac-drop" id="ac-${id}">${opts}</div>
+  </div>`;
+}
+function acOpen(id){
+  if(acOpenId&&acOpenId!==id)acClose(acOpenId);
+  acOpenId=id;
+  const drop=document.getElementById('ac-'+id);
+  if(drop){drop.querySelectorAll('.ac-opt').forEach(o=>o.style.display='');drop.classList.add('open');}
+}
+function acClose(id){
+  const drop=document.getElementById('ac-'+id);
+  if(drop)drop.classList.remove('open');
+  if(acOpenId===id)acOpenId=null;
+}
+function acBlur(id){setTimeout(()=>acClose(id),250);}
+function acFilter(id,val){
+  const drop=document.getElementById('ac-'+id);if(!drop)return;
+  const v=val.toLowerCase();
+  let any=false;
+  drop.querySelectorAll('.ac-opt').forEach(o=>{
+    const show=o.textContent.toLowerCase().includes(v);
+    o.style.display=show?'':'none';
+    if(show)any=true;
+  });
+  if(any)acOpen(id);else acClose(id);
+}
+function acPick(id,el){
+  const inp=document.getElementById(id);
+  if(inp)inp.value=el.textContent;
+  acClose(id);
+}
+function acVal(id){const e=document.getElementById(id);return e?e.value.trim():'';}
+
+// ══ LIST MANAGER ══
+function getList(lk){return lk==='food'?S.foodList:lk==='med-orange'?S.medList.orange:S.medList.black;}
+function renderListMgr(cid,list,lk){
+  const el=document.getElementById(cid);if(!el)return;
+  const rows=list.map((item,i)=>{
+    if(UI.editing[cid]===i){
+      return `<tr><td><input class="lei" id="${cid}-e${i}" value="${item}"
+        onkeydown="if(event.key==='Enter')saveEdit('${lk}',${i},'${cid}');if(event.key==='Escape')cancelEdit('${cid}')"></td>
+        <td><div class="lacts"><button class="ab2 save" onclick="saveEdit('${lk}',${i},'${cid}')">儲存</button>
+        <button class="ab2" onclick="cancelEdit('${cid}')">取消</button></div></td></tr>`;
+    }
+    return `<tr><td><span class="item-text">${item}</span></td>
+      <td><div class="lacts"><button class="ab2 edit" onclick="startEdit('${cid}',${i})">編輯</button>
+      <button class="ab2 del" onclick="deleteItem('${lk}',${i})">刪除</button></div></td></tr>`;
+  }).join('');
+  el.innerHTML=`<table class="list-table">${rows||'<tr><td colspan="2" style="font-size:13px;color:var(--tx3);padding:8px 4px">尚無項目</td></tr>'}</table>
+    <div class="add-row"><input type="text" id="${cid}-new" placeholder="輸入名稱後新增"
+      onkeydown="if(event.key==='Enter')addItem('${lk}','${cid}-new')">
+      <button class="btn btn-sm btn-primary" onclick="addItem('${lk}','${cid}-new')">新增</button></div>`;
+  if(UI.editing[cid]!==undefined){const inp=document.getElementById(`${cid}-e${UI.editing[cid]}`);if(inp){inp.focus();inp.select();}}
+}
+function startEdit(cid,i){UI.editing[cid]=i;renderAll();}
+function cancelEdit(cid){delete UI.editing[cid];renderAll();}
+function saveEdit(lk,i,cid){
+  const inp=document.getElementById(`${cid}-e${i}`);
+  if(inp){const v=inp.value.trim();if(v)getList(lk)[i]=v;}
+  delete UI.editing[cid];saveState();renderAll();
+}
+function deleteItem(lk,i){getList(lk).splice(i,1);saveState();renderAll();}
+function addItem(lk,inputId){
+  const inp=document.getElementById(inputId);if(!inp)return;
+  const v=inp.value.trim();const list=getList(lk);
+  if(v&&!list.includes(v)){list.push(v);inp.value='';saveState();renderAll();}
+}
+
+// ══ MEALS ══
+function renderMealCards(){
+  const el=document.getElementById('meal-cards');if(!el)return;
+  el.innerHTML=['早餐','午餐','晚餐'].map(m=>{
+    const meal=S.meals[m];
+    if(meal.state==='idle'){
+      return `<div class="meal-slot">
+        <div class="mhd"><span class="mname">${m}</span><span class="mstatus">尚未放飯</span></div>
+        <div class="fg" style="margin-bottom:10px"><label>食物名稱</label>${acHTML('food-'+m,S.foodList,'選擇或輸入...')}</div>
+        <div class="frow">
+          <div class="fg"><label>放飯量 (g)</label><input type="number" id="given-${m}" placeholder="0" min="0" inputmode="numeric"></div>
+          <button class="btn btn-or" style="align-self:flex-end" onclick="doFeed('${m}')">放飯</button>
+        </div></div>`;
+    } else if(meal.state==='fed'){
+      return `<div class="meal-slot fed">
+        <div class="mhd"><span class="mname">${m}</span><span class="mstatus">已放飯 ${meal.given}g</span></div>
+        <div style="font-size:13px;color:var(--tx2);margin-bottom:8px">食物：${meal.food||'未填'} &nbsp;<span class="tchip">放飯 ${meal.feedTime}</span></div>
+        <div class="frow">
+          <div class="fg"><label>剩餘量 (g)</label><input type="number" id="left-${m}" placeholder="0" min="0" inputmode="numeric"></div>
+          <button class="btn btn-gr" style="align-self:flex-end" onclick="doCollect('${m}')">收碗</button>
+        </div></div>`;
+    } else {
+      const eaten=Math.max(0,meal.given-meal.left);
+      return `<div class="meal-slot done">
+        <div class="mhd"><span class="mname">${m}</span><span class="mstatus done">進食 ${eaten}g ✓</span></div>
+        <div style="font-size:13px;color:var(--tx2)">食物：${meal.food||'未填'} · 放 ${meal.given}g 剩 ${meal.left}g</div>
+        <div style="margin-top:6px;display:flex;gap:6px">
+          <span class="tchip">放飯 ${meal.feedTime}</span><span class="tchip">收碗 ${meal.collectTime}</span>
+        </div></div>`;
+    }
+  }).join('');
+}
+function doFeed(m){
+  const food=acVal('food-'+m);
+  const given=parseFloat(document.getElementById('given-'+m)?.value)||0;
+  S.meals[m]={state:'fed',food,given,feedTime:ts(),left:0,collectTime:null};
+  saveState();renderMealCards();
+}
+function doCollect(m){
+  const left=parseFloat(document.getElementById('left-'+m)?.value)||0;
+  S.meals[m].state='done';S.meals[m].left=left;S.meals[m].collectTime=ts();
+  const meal=S.meals[m];
+  addRec({type:'meal',meal:m,food:meal.food,given:meal.given,left,eaten:Math.max(0,meal.given-left),feedTime:meal.feedTime,collectTime:meal.collectTime});
+  renderMealCards();
+}
+
+// ══ WATER ══
+function addWater(){
+  const ml=parseFloat(document.getElementById('water-ml').value)||0;
+  const note=document.getElementById('water-note').value.trim();
+  if(!ml)return;
+  addRec({type:'water',ml,note});
+  document.getElementById('water-ml').value='';document.getElementById('water-note').value='';
+  renderSharedRecs('water','water-recs');
+}
+
+// ══ TOILET ══
+function addToilet(ttype){
+  addRec({type:'toilet',ttype,cat:document.getElementById('toilet-cat').value});
+  updateToiletCounts();renderSharedRecs('toilet','toilet-recs');
+}
+function updateToiletCounts(){
+  const td=today();
+  document.getElementById('pee-count').textContent=S.records.filter(r=>r.type==='toilet'&&r.ttype==='排尿'&&r.date===td).length;
+  document.getElementById('poop-count').textContent=S.records.filter(r=>r.type==='toilet'&&r.ttype==='排便'&&r.date===td).length;
+}
+
+// ══ STOCK MODAL ══
+function openStock(cat){
+  UI.stockCat=cat;
+  const iStyle='width:100%;padding:10px 12px;font-size:15px;border:.5px solid var(--bd2);border-radius:var(--rs);background:var(--bg2);color:var(--tx);font-family:inherit;-webkit-appearance:none';
+  document.getElementById('modal-content').innerHTML=`
+    <h3>領藥 — ${cat==='orange'?'橘子':'牛牛'}</h3>
+    <div style="margin-bottom:12px"><label style="display:block;font-size:12px;color:var(--tx2);margin-bottom:4px">藥名</label>
+      ${acHTML('sm-name',S.medList[cat],'選擇或輸入...')}</div>
+    <div style="margin-bottom:12px"><label style="display:block;font-size:12px;color:var(--tx2);margin-bottom:4px">領藥顆數</label>
+      <input id="sm-count" type="number" placeholder="0" min="0" inputmode="numeric" style="${iStyle}"></div>
+    <div style="margin-bottom:12px"><label style="display:block;font-size:12px;color:var(--tx2);margin-bottom:4px">備註</label>
+      <input id="sm-note" type="text" placeholder="可留空" style="${iStyle}"></div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveStock()">確認</button></div>`;
+  document.getElementById('overlay').classList.add('show');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('show');}
+function saveStock(){
+  const cat=UI.stockCat;
+  const count=parseInt(document.getElementById('sm-count').value)||0;
+  const name=acVal('sm-name');
+  const note=document.getElementById('sm-note').value.trim();
+  S.medStock[cat]+=count;
+  saveState();
+  addRec({type:'stock',cat,name,count,note});
+  document.getElementById('med-count-'+cat).textContent=S.medStock[cat];
+  closeModal();renderCatPanel(cat);
+}
+
+// ══ CAT PANELS ══
+function renderCatPanel(cat){
+  renderMedSection(cat);renderWeightSection(cat);renderVomitSection(cat);renderNotesSection(cat);
+  renderListMgr(`med-list-mgr-${cat}`,S.medList[cat],`med-${cat}`);
+  if(UI.sec[cat]==='charts')renderCatCharts(cat);
+}
+
+function renderMedSection(cat){
+  const el=document.getElementById(cat+'-med');if(!el)return;
+  const recs=S.records.filter(r=>(r.type==='med'||r.type==='stock')&&r.cat===cat);
+  el.innerHTML=`<div class="card"><div class="clabel">餵藥紀錄</div>
+    <div style="margin-bottom:10px"><label style="display:block;font-size:12px;color:var(--tx2);margin-bottom:4px">藥名</label>
+      ${acHTML(cat+'-mname',S.medList[cat],'選擇或輸入...')}</div>
+    <div class="frow">
+      <div class="fg"><label>顆數</label><input type="number" id="${cat}-mcount" value="1" min="1" inputmode="numeric"></div>
+      <div class="fg"><label>備註</label><input type="text" id="${cat}-mnote" placeholder="可留空"></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="addMed('${cat}')">紀錄餵藥</button>
+  </div>
+  <div class="recs">${recs.length?recs.slice().reverse().map(r=>{
+    if(r.type==='stock')return recH(r,`領藥：${r.name||'藥'} +${r.count}顆`,`<span class="tag t-ok">${r.note||'補藥'}</span>`);
+    return recH(r,`${r.name||'藥'} · ${r.count}顆`,r.note?`<span class="tag t-med">${r.note}</span>`:'');
+  }).join(''):'<div class="empty">尚無餵藥紀錄</div>'}</div>`;
+}
+function addMed(cat){
+  const name=acVal(cat+'-mname')||'藥';
+  const count=parseInt(document.getElementById(cat+'-mcount').value)||1;
+  const note=document.getElementById(cat+'-mnote').value.trim();
+  if(S.medStock[cat]<count){alert('剩餘藥顆數不足！');return;}
+  S.medStock[cat]-=count;saveState();
+  addRec({type:'med',cat,name,count,note});
+  document.getElementById('med-count-'+cat).textContent=S.medStock[cat];
+  document.getElementById(cat+'-mnote').value='';
+  renderCatPanel(cat);
+}
+
+function renderWeightSection(cat){
+  const el=document.getElementById(cat+'-weight');if(!el)return;
+  const recs=S.records.filter(r=>r.type==='weight'&&r.cat===cat);
+  el.innerHTML=`<div class="card"><div class="clabel">體重紀錄</div>
+    <div class="frow">
+      <div class="fg"><label>體重 (kg)</label><input type="number" id="${cat}-wval" placeholder="0.0" step="0.1" min="0" inputmode="decimal"></div>
+      <div class="fg"><label>備註</label><input type="text" id="${cat}-wnote" placeholder="可留空"></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="addWeight('${cat}')">紀錄體重</button>
+  </div>
+  <div class="recs">${recs.length?recs.slice().reverse().map(r=>recH(r,`體重 ${r.val} kg`,r.note?`<span class="tag" style="background:var(--bg3);color:var(--tx2)">${r.note}</span>`:'')).join(''):'<div class="empty">尚無體重紀錄</div>'}</div>`;
+}
+function addWeight(cat){
+  const val=parseFloat(document.getElementById(cat+'-wval').value);
+  const note=document.getElementById(cat+'-wnote').value.trim();
+  if(!val)return;addRec({type:'weight',cat,val,note});
+  document.getElementById(cat+'-wval').value='';document.getElementById(cat+'-wnote').value='';
+  renderCatPanel(cat);
+}
+
+function renderVomitSection(cat){
+  const el=document.getElementById(cat+'-vomit');if(!el)return;
+  const recs=S.records.filter(r=>r.type==='vomit'&&r.cat===cat);
+  el.innerHTML=`<div class="card"><div class="clabel">嘔吐紀錄</div>
+    <div class="frow">
+      <div class="fg"><label>次數</label><input type="number" id="${cat}-vcount" value="1" min="1" inputmode="numeric"></div>
+      <div class="fg"><label>描述</label><input type="text" id="${cat}-vnote" placeholder="顏色、內容物..."></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="addVomit('${cat}')">紀錄嘔吐</button>
+  </div>
+  <div class="recs">${recs.length?recs.slice().reverse().map(r=>recH(r,`嘔吐 ${r.count} 次`,r.note?`<span class="tag t-warn">${r.note}</span>`:'')).join(''):'<div class="empty">尚無嘔吐紀錄</div>'}</div>`;
+}
+function addVomit(cat){
+  const count=parseInt(document.getElementById(cat+'-vcount').value)||1;
+  const note=document.getElementById(cat+'-vnote').value.trim();
+  addRec({type:'vomit',cat,count,note});
+  document.getElementById(cat+'-vnote').value='';renderCatPanel(cat);
+}
+
+function renderNotesSection(cat){
+  const el=document.getElementById(cat+'-notes');if(!el)return;
+  const recs=S.records.filter(r=>r.type==='notes'&&r.cat===cat);
+  el.innerHTML=`<div class="card"><div class="clabel">注意事項</div>
+    <div class="fg" style="margin-bottom:10px"><textarea id="${cat}-ntxt" placeholder="觀察到的症狀、行為異常、提醒事項…"></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="addNotes('${cat}')">紀錄注意事項</button>
+  </div>
+  <div class="recs">${recs.length?recs.slice().reverse().map(r=>recH(r,r.text,'')).join(''):'<div class="empty">尚無注意事項</div>'}</div>`;
+}
+function addNotes(cat){
+  const text=document.getElementById(cat+'-ntxt').value.trim();
+  if(!text)return;addRec({type:'notes',cat,text});
+  document.getElementById(cat+'-ntxt').value='';renderCatPanel(cat);
+}
+
+function recH(r,main,tag){
+  return `<div class="rec"><div class="rec-l">
+    <span class="rec-time">${r.date} ${r.time}</span>
+    <span class="rec-main">${main}</span>
+    ${tag?`<div class="rec-detail">${tag}</div>`:''}
+  </div><button class="rec-del" onclick="delRec(${r.id})">×</button></div>`;
+}
+function delRec(id){S.records=S.records.filter(r=>r.id!==id);saveState();renderAll();}
+
+function renderSharedRecs(type,cid){
+  const el=document.getElementById(cid);if(!el)return;
+  const recs=S.records.filter(r=>r.type===type);
+  if(!recs.length){el.innerHTML='<div class="empty">尚無紀錄</div>';return;}
+  el.innerHTML=recs.slice().reverse().map(r=>{
+    if(r.type==='meal')return recH(r,`${r.meal}·${r.food||'未填'}·進食${r.eaten}g`,`<span class="tchip">放 ${r.feedTime}</span> <span class="tchip">收 ${r.collectTime}</span>`);
+    if(r.type==='water')return recH(r,`飲水 ${r.ml}ml`,r.note?`<span class="tag t-water">${r.note}</span>`:'');
+    if(r.type==='toilet'){
+      const cls=r.ttype==='排尿'?'t-pee':'t-poop';
+      const ct=r.cat!=='不確定'?`<span class="tag" style="background:var(--bg3);color:var(--tx2)">${r.cat}</span> `:'';
+      return recH(r,r.ttype,ct+`<span class="tag ${cls}">${r.ttype}</span>`);
+    }
+    return '';
+  }).join('');
+}
+
+function filterLog(f,btn){
+  UI.logFilter=f;
+  document.querySelectorAll('.lf button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderSharedLog();
+}
+function renderSharedLog(){
+  const el=document.getElementById('shared-log-list');if(!el)return;
+  const types=UI.logFilter==='all'?['meal','water','toilet']:[UI.logFilter];
+  const recs=S.records.filter(r=>types.includes(r.type));
+  if(!recs.length){el.innerHTML='<div class="empty">尚無紀錄</div>';return;}
+  el.innerHTML=recs.slice().reverse().map(r=>{
+    if(r.type==='meal')return recH(r,`${r.meal}·${r.food||'未填'}·進食${r.eaten}g`,`<span class="tchip">放 ${r.feedTime}</span> <span class="tchip">收 ${r.collectTime}</span>`);
+    if(r.type==='water')return recH(r,`飲水 ${r.ml}ml`,r.note?`<span class="tag t-water">${r.note}</span>`:'');
+    if(r.type==='toilet'){
+      const cls=r.ttype==='排尿'?'t-pee':'t-poop';
+      const ct=r.cat!=='不確定'?`<span class="tag" style="background:var(--bg3);color:var(--tx2)">${r.cat}</span> `:'';
+      return recH(r,r.ttype,ct+`<span class="tag ${cls}">${r.ttype}</span>`);
+    }
+    return '';
+  }).join('');
+}
+
+// ══ CHARTS (pure canvas, no external lib) ══
+function getLast14(){
+  const days=[];const d=new Date();
+  for(let i=13;i>=0;i--){const dd=new Date(d);dd.setDate(d.getDate()-i);days.push(dd.toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}));}
+  return days;
+}
+function sd(d){return d.slice(5);}
+
+function isDark(){return window.matchMedia('(prefers-color-scheme:dark)').matches;}
+
+function setupCanvas(canvas,H){
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth-24;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return {ctx,W,H};
+}
+
+function drawBar(canvas,datasets,labels){
+  const{ctx,W,H}=setupCanvas(canvas,150);
+  const pad={t:12,r:8,b:28,l:30};
+  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  const dark=isDark();
+  const gc=dark?'rgba(255,255,255,.07)':'rgba(0,0,0,.05)';
+  const tc=dark?'#555':'#aaa';
+  const allV=datasets.flatMap(d=>d.data);
+  const maxV=Math.max(...allV,1);
+  const n=labels.length;
+  const gw=cw/n;
+  const bw=Math.min((gw/datasets.length)-2,16);
+
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ch*(1-i/4);
+    ctx.strokeStyle=gc;ctx.lineWidth=.5;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
+    ctx.fillStyle=tc;ctx.font='9px -apple-system,sans-serif';ctx.textAlign='right';
+    ctx.fillText(Math.round(maxV/4*i),pad.l-3,y+3);
+  }
+  const step=Math.ceil(n/6);
+  ctx.fillStyle=tc;ctx.textAlign='center';ctx.font='9px -apple-system,sans-serif';
+  labels.forEach((l,i)=>{if(i%step===0||i===n-1)ctx.fillText(sd(l),pad.l+i*gw+gw/2,H-4);});
+
+  datasets.forEach((ds,di)=>{
+    ctx.fillStyle=ds.color;
+    ds.data.forEach((v,i)=>{
+      if(!v)return;
+      const bh=(v/maxV)*ch;
+      const x=pad.l+i*gw+(di*(bw+1))+(gw-datasets.length*(bw+1))/2;
+      ctx.fillRect(x,pad.t+ch-bh,bw,bh);
+    });
+  });
+}
+
+function drawLine(canvas,datasets,labels){
+  const{ctx,W,H}=setupCanvas(canvas,150);
+  const pad={t:12,r:8,b:28,l:34};
+  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  const dark=isDark();
+  const gc=dark?'rgba(255,255,255,.07)':'rgba(0,0,0,.05)';
+  const tc=dark?'#555':'#aaa';
+
+  const allV=datasets.flatMap(d=>d.data.filter(v=>v!==null&&v!==undefined));
+  if(!allV.length){ctx.fillStyle=tc;ctx.textAlign='center';ctx.font='13px -apple-system,sans-serif';ctx.fillText('尚無資料',W/2,H/2);return;}
+  let mn=Math.min(...allV),mx=Math.max(...allV);
+  if(mn===mx){mn=Math.max(0,mn-.5);mx=mx+.5;}
+  const rng=mx-mn;mn-=rng*.08;mx+=rng*.08;
+
+  const xStep=cw/(labels.length-1||1);
+  const yS=ch/(mx-mn);
+
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ch*(1-i/4);
+    ctx.strokeStyle=gc;ctx.lineWidth=.5;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
+    ctx.fillStyle=tc;ctx.font='9px -apple-system,sans-serif';ctx.textAlign='right';
+    ctx.fillText((mn+(mx-mn)/4*i).toFixed(1),pad.l-2,y+3);
+  }
+  const step=Math.ceil(labels.length/6);
+  ctx.fillStyle=tc;ctx.textAlign='center';ctx.font='9px -apple-system,sans-serif';
+  labels.forEach((l,i)=>{if(i%step===0||i===labels.length-1)ctx.fillText(sd(l),pad.l+i*xStep,H-4);});
+
+  datasets.forEach(ds=>{
+    ctx.strokeStyle=ds.color;ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';
+    let started=false;
+    ctx.beginPath();
+    labels.forEach((_,i)=>{
+      const v=ds.data[i];
+      if(v===null||v===undefined){started=false;return;}
+      const x=pad.l+i*xStep,y=pad.t+ch-(v-mn)*yS;
+      if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    labels.forEach((_,i)=>{
+      const v=ds.data[i];if(v===null||v===undefined)return;
+      const x=pad.l+i*xStep,y=pad.t+ch-(v-mn)*yS;
+      ctx.fillStyle=ds.color;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();
+    });
+  });
+}
+
+function chartSection(title,canvasId,legend){
+  return `<div class="chart-section">
+    <div class="chart-title">${title}</div>
+    <div class="chart-wrap"><canvas id="${canvasId}"></canvas></div>
+    ${legend?`<div class="chart-legend">${legend}</div>`:''}
+  </div>`;
+}
+function dot(color,label){return `<div class="legend-item"><div class="legend-dot" style="background:${color}"></div>${label}</div>`;}
+
+function renderSharedCharts(){
+  const el=document.getElementById('charts-shared');if(!el)return;
+  const days=getLast14();
+  const mealD=days.map(d=>S.records.filter(r=>r.type==='meal'&&r.date===d).reduce((s,r)=>s+r.eaten,0));
+  const waterD=days.map(d=>S.records.filter(r=>r.type==='water'&&r.date===d).reduce((s,r)=>s+r.ml,0));
+  const peeD=days.map(d=>S.records.filter(r=>r.type==='toilet'&&r.ttype==='排尿'&&r.date===d).length);
+  const poopD=days.map(d=>S.records.filter(r=>r.type==='toilet'&&r.ttype==='排便'&&r.date===d).length);
+
+  el.innerHTML=
+    chartSection('每日進食量 (g)','c-meal','')+
+    chartSection('每日飲水量 (ml)','c-water','')+
+    chartSection('每日排泄次數','c-toilet',dot('#EF9F27','排尿')+dot('#888780','排便'));
+
+  requestAnimationFrame(()=>{
+    drawBar(document.getElementById('c-meal'),[{data:mealD,color:'#E8813A'}],days);
+    drawBar(document.getElementById('c-water'),[{data:waterD,color:'#378ADD'}],days);
+    drawBar(document.getElementById('c-toilet'),[{data:peeD,color:'#EF9F27'},{data:poopD,color:'#888780'}],days);
+  });
+}
+
+function renderCatCharts(cat){
+  const el=document.getElementById('charts-'+cat);if(!el)return;
+  const days=getLast14();
+  const color=cat==='orange'?'#E8813A':'#534AB7';
+  const wD=days.map(d=>{const r=S.records.filter(r=>r.type==='weight'&&r.cat===cat&&r.date===d);return r.length?r[r.length-1].val:null;});
+  const mD=days.map(d=>S.records.filter(r=>r.type==='med'&&r.cat===cat&&r.date===d).reduce((s,r)=>s+r.count,0));
+  const vD=days.map(d=>S.records.filter(r=>r.type==='vomit'&&r.cat===cat&&r.date===d).reduce((s,r)=>s+r.count,0));
+
+  el.innerHTML=
+    chartSection('體重趨勢 (kg)',`c-w-${cat}`,'')+
+    chartSection('每日餵藥顆數',`c-m-${cat}`,'')+
+    chartSection('每日嘔吐次數',`c-v-${cat}`,'');
+
+  requestAnimationFrame(()=>{
+    drawLine(document.getElementById(`c-w-${cat}`),[{data:wD,color}],days);
+    drawBar(document.getElementById(`c-m-${cat}`),[{data:mD,color}],days);
+    drawBar(document.getElementById(`c-v-${cat}`),[{data:vD,color:'#D85A30'}],days);
+  });
+}
+
+// ══ RENDER ALL ══
+function renderStorageStatus(){
+  const el = document.getElementById('storage-status');
+  if(!el) return;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw){ el.innerHTML = '⚠️ 尚無儲存資料'; return; }
+    const sv = JSON.parse(raw);
+    const kb = (raw.length / 1024).toFixed(1);
+    el.innerHTML = [
+      `✅ 資料已儲存`,
+      `📦 大小：${kb} KB`,
+      `📋 紀錄筆數：${sv.records?.length || 0}`,
+      `💊 橘子藥：${sv.medStock?.orange ?? '?'} 顆`,
+      `💊 牛牛藥：${sv.medStock?.black ?? '?'} 顆`,
+      `🥣 食物選單：${sv.foodList?.length || 0} 項`,
+      `🕐 上次儲存：${new Date().toLocaleTimeString('zh-TW')}`
+    ].join('<br>');
+  } catch(e) {
+    el.innerHTML = `❌ 讀取失敗：${e.message}`;
+  }
+}
+
+function renderAll(){
+  renderMealCards();
+  renderSharedRecs('water','water-recs');
+  renderSharedRecs('toilet','toilet-recs');
+  updateToiletCounts();
+  if(UI.sec.shared==='log')renderSharedLog();
+  if(UI.sec.shared==='charts')renderSharedCharts();
+  if(UI.sec.shared==='settings'){renderListMgr('food-list-mgr',S.foodList,'food');renderStorageStatus();}
+  renderCatPanel('orange');
+  renderCatPanel('black');
+}
+
+switchCat('shared');
+renderAll();
+
+// 頁面載入後把存好的藥顆數寫進 banner
+['orange','black'].forEach(cat=>{
+  const el=document.getElementById('med-count-'+cat);
+  if(el) el.textContent=S.medStock[cat];
+});
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
