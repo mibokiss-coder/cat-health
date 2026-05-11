@@ -1,10 +1,16 @@
-// 每次更新 index.html 時，更新這個版本號讓 SW 強制重新快取
-const CACHE = 'cat-health-v3';
-const FILES = ['./index.html', './manifest.json'];
+const CACHE = 'cat-health-v4';
+const BASE = '/cat-health/';
+const FILES = [
+  BASE,
+  BASE + 'index.html',
+  BASE + 'manifest.json',
+  BASE + 'icons/icon-192.png',
+  BASE + 'icons/icon-512.png'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(FILES))
+    caches.open(CACHE).then(c => c.addAll(FILES)).catch(err => console.warn('Cache install error:', err))
   );
   self.skipWaiting();
 });
@@ -18,14 +24,16 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Network first，成功就更新快取；離線才用快取
+// Network-first：有網路拿新版並更新快取，無網路才用快取
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request).then(res => {
-      const clone = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, clone));
-      return res;
-    }).catch(() => caches.match(e.request))
+    fetch(e.request)
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
